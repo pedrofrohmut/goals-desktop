@@ -1,8 +1,16 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
 
 import Spinner from "../components/Spinner"
 
+import { signin } from "../redux/auth/authThunk"
+import { useTypedDispatch, useTypedSelector } from "../redux/hooks"
+
 const SignInPage = () => {
+    const navigate = useNavigate()
+    const dispatch = useTypedDispatch()
+    const { user, isSuccess } = useTypedSelector(state => state.auth)
+
     const [isLoading, setIsLoading] = useState(false)
     const [isSubmitted, setIsSubmitted] = useState(false)
 
@@ -23,8 +31,15 @@ const SignInPage = () => {
         setIsLoading(true)
         setIsSubmitted(true)
 
+        dispatch(signin({ email, password }))
         resetState()
     }
+
+    useEffect(() => {
+        if (isSuccess || user) {
+            navigate("/")
+        }
+    }, [isSuccess, user])
 
     return (
         <div className="page-container">
