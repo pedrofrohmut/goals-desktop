@@ -30,7 +30,7 @@
 .goal button {
     background-color: var(--blue-100);
     border: 0;
-    color: var(--gray-500);
+    color: var(--gray-400);
     padding: 1rem;
     font-size: 0.9rem;
 }

@@ -1,27 +1,73 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
 
 import Spinner from "../components/Spinner"
 import AddGoalForm from "../components/AddGoalForm"
 import GoalList from "../components/GoalList"
 
-// TEMP:
-const isLoadingGoals = false
-const goals = [
-    { id: 1, text: "Goal 1" },
-    { id: 2, text: "Goal 2" },
-    { id: 3, text: "Goal 3" },
-]
-const user = {
-    email: "john@doe.com",
-    name: "John Doe"
-}
+import { setUser } from "../redux/auth/authSlice"
+import { resetGoals } from "../redux/goals/goalSlice"
+import { add, getAll, remove } from "../redux/goals/goalThunk"
+import { useTypedDispatch, useTypedSelector } from "../redux/hooks"
 
 const DashboardPage = () => {
+    const navigate = useNavigate()
+
+    const dispatch = useTypedDispatch()
+    const { user } = useTypedSelector((state) => state.auth)
+    const { goals, isLoading: isLoadingGoals } = useTypedSelector((state) => state.goal)
+
+    // This variable only exists to make the UI not so flashy (loading ending too fast)
     const [isLoading, setIsLoading] = useState(false)
 
-    const handleAdd = () => {}
+    const updateGoals = () => {
+        setTimeout(() => {
+            dispatch(getAll())
+            setIsLoading(false)
+        }, 380)
+    }
 
-    const handleDelete = () => {}
+    const handleAdd = (text: string) => {
+        if (user) {
+            setIsLoading(true)
+            dispatch(add({ text, userId: user.id }))
+            updateGoals()
+        }
+    }
+
+    const handleDelete = (id: string) => {
+        if (user) {
+            setIsLoading(true)
+            dispatch(remove(id))
+            updateGoals()
+        }
+    }
+
+    // Check for user in the localStorage
+    useEffect(() => {
+        if (!user) {
+            const lsUser = localStorage.getItem("ls_user")
+            if (!lsUser) {
+                setTimeout(() => {
+                    navigate("/signin")
+                }, 500)
+            } else {
+                dispatch(setUser(JSON.parse(lsUser)))
+            }
+        }
+    }, [user])
+
+    // Load goals
+    useEffect(() => {
+        setIsLoading(false)
+        dispatch(getAll())
+        return () => {
+            dispatch(resetGoals())
+        }
+    }, [])
+
+    // Load nothing but the spinner in case of no user
+    if (!user) return <Spinner />
 
     return (
         <>
